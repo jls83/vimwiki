@@ -543,10 +543,11 @@ function! vimwiki#base#backlinks() abort
   let current_filename = expand('%:p')
   let locations = []
   for idx in range(vimwiki#vars#number_of_wikis())
-    let syntax = vimwiki#vars#get_wikilocal('syntax', idx)
     let wikifiles = vimwiki#base#find_files(idx, 0)
     for source_file in wikifiles
-      let links = s:get_links(source_file, idx)
+      " Include links formatted in the Markdown & default styles
+      let links = s:get_links(source_file, idx, 'markdown')
+      let links += s:get_links(source_file, idx, 'default')
       for [target_file, _, lnum, col] in links
         if vimwiki#u#is_windows()
           " TODO this is a temporary fix - see issue #478
@@ -967,7 +968,7 @@ function! s:jump_to_segment(segment, segment_norm_re, segment_nb) abort
 endfunction
 
 
-function! s:get_links(wikifile, idx) abort
+function! s:get_links(wikifile, idx, ...) abort
   " Get: a list of all links inside the wiki file
   " Params: full path to a wiki file and its wiki number
   " Every list item has the form
@@ -976,9 +977,8 @@ function! s:get_links(wikifile, idx) abort
     return []
   endif
 
-  let syntax = vimwiki#vars#get_wikilocal('syntax', a:idx)
+  let syntax = get(a:, 1, vimwiki#vars#get_wikilocal('syntax', a:idx))
   let rx_link = vimwiki#vars#get_syntaxlocal('wikilink', syntax)
-
   if syntax ==# 'markdown'
     let md_rx_link = vimwiki#vars#get_syntaxlocal('rxWeblink1MatchUrl', syntax)
   endif
